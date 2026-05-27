@@ -1,0 +1,14 @@
+{
+  "name": "youtube-ai-trend-finder-mvp",
+  "private": true,
+  "version": "0.1.0",
+  "description": "YouTube low-subscriber high-view opportunity finder MVP",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "start": "yarn --cwd server start",
+    "build": "yarn --cwd client build",
+    "install:all": "yarn --cwd server install && yarn --cwd client install",
+    "dev:server": "yarn --cwd server dev",
+    "dev:client": "yarn --cwd client dev"
+  }
+}

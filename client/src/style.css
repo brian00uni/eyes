@@ -129,7 +129,41 @@ button:disabled {
 }
 
 .direct-download {
-  padding: 20px 24px;
+  border: 2px solid #172033;
+  background: #f8fbff;
+  padding: 22px 24px;
+  box-shadow: 0 18px 42px rgba(23, 32, 51, 0.12);
+}
+
+.direct-download-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.direct-download-head h2 {
+  margin: 2px 0 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.direct-download-kicker {
+  margin: 0;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.direct-download-head span {
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .direct-download-row {
@@ -141,7 +175,12 @@ button:disabled {
 
 .direct-download-row button {
   min-height: 46px;
+  background: #2563eb;
   white-space: nowrap;
+}
+
+.direct-download-row button:hover {
+  background: #1d4ed8;
 }
 
 .summary h2, .table-head h2 { margin-top: 0; }
@@ -253,6 +292,7 @@ th {
   .form-grid { grid-template-columns: 1fr; }
   .form-grid label:first-child, .actions { grid-column: span 1; }
   .actions button { width: 100%; }
+  .direct-download-head { flex-direction: column; }
   .direct-download-row { grid-template-columns: 1fr; }
   .direct-download-row button { width: 100%; }
 }

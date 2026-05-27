@@ -289,8 +289,16 @@ function apiUnavailableMessage() {
     </section>
 
     <section class="panel direct-download">
+      <div class="direct-download-head">
+        <div>
+          <p class="direct-download-kicker">빠른 다운로드</p>
+          <h2>유튜브 URL 직접 다운로드</h2>
+        </div>
+        <span>URL 붙여넣기</span>
+      </div>
+
       <label>
-        유튜브 URL 직접 다운로드
+        다운로드할 영상 링크
         <div class="direct-download-row">
           <input
             v-model="directDownloadUrl"

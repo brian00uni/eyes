@@ -14,6 +14,7 @@ const form = ref({
 
 const loading = ref(false);
 const downloadingVideoId = ref('');
+const directDownloadUrl = ref('');
 const error = ref('');
 const toast = ref(null);
 let toastTimer = null;
@@ -119,6 +120,20 @@ async function downloadVideo(item) {
   }
 }
 
+async function downloadDirectVideo() {
+  const videoId = extractYouTubeVideoId(directDownloadUrl.value);
+  if (!videoId) {
+    error.value = '올바른 유튜브 URL을 입력하세요.';
+    showToast('error', error.value);
+    return;
+  }
+
+  await downloadVideo({
+    videoId,
+    title: `youtube-${videoId}`,
+  });
+}
+
 function downloadUrl(item) {
   const params = new URLSearchParams({ title: item.title || item.videoId });
   return apiUrl(`/api/youtube/download/${item.videoId}?${params.toString()}`);
@@ -139,6 +154,34 @@ function sanitizeFilename(value) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 120) || 'youtube-video';
+}
+
+function extractYouTubeVideoId(value) {
+  const raw = String(value || '').trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
+
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      const id = url.pathname.split('/').filter(Boolean)[0];
+      return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : '';
+    }
+
+    if (host.endsWith('youtube.com')) {
+      const watchId = url.searchParams.get('v');
+      if (/^[a-zA-Z0-9_-]{11}$/.test(watchId || '')) return watchId;
+
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      const videoId = pathParts.find((part) => /^[a-zA-Z0-9_-]{11}$/.test(part));
+      return videoId || '';
+    }
+  } catch {
+    return '';
+  }
+
+  return '';
 }
 
 function showToast(type, message) {
@@ -243,6 +286,23 @@ function apiUnavailableMessage() {
           네이버 검색 추이 보기
         </button>
       </div>
+    </section>
+
+    <section class="panel direct-download">
+      <label>
+        유튜브 URL 직접 다운로드
+        <div class="direct-download-row">
+          <input
+            v-model="directDownloadUrl"
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            @keydown.enter.prevent="downloadDirectVideo"
+          />
+          <button :disabled="Boolean(downloadingVideoId)" @click="downloadDirectVideo">
+            {{ downloadingVideoId ? '받는 중...' : '다운로드' }}
+          </button>
+        </div>
+      </label>
     </section>
 
     <p v-if="error" class="error">{{ error }}</p>

@@ -17,6 +17,7 @@
 1. Node.js 18 이상
 2. YouTube Data API Key
 3. 선택: 네이버 데이터랩 API Client ID / Secret
+4. 선택: Instagram Graph API 토큰 / TikTok Research API 토큰
 
 ## API 키 준비
 
@@ -28,6 +29,12 @@ USE_MOCK_DATA=false
 YOUTUBE_API_KEY=발급받은_YouTube_Data_API_Key
 NAVER_CLIENT_ID=발급받은_Naver_Client_ID
 NAVER_CLIENT_SECRET=발급받은_Naver_Client_Secret
+INSTAGRAM_GRAPH_VERSION=v21.0
+INSTAGRAM_ACCESS_TOKEN=발급받은_Instagram_Access_Token
+INSTAGRAM_BUSINESS_ACCOUNT_ID=Instagram_Business_Account_ID
+TIKTOK_ACCESS_TOKEN=발급받은_TikTok_Access_Token
+TIKTOK_CLIENT_KEY=TikTok_Client_Key
+TIKTOK_CLIENT_SECRET=TikTok_Client_Secret
 ```
 
 키가 아직 없으면 `USE_MOCK_DATA=true`로 두고 샘플 데이터로 화면과 점수 계산을 먼저 확인할 수 있습니다. 실제 YouTube/Naver 데이터를 조회하려면 `USE_MOCK_DATA=false`로 바꾸고 아래 키를 발급받아 입력해야 합니다.
@@ -37,6 +44,12 @@ Google Cloud Console에서 YouTube Data API v3를 활성화하고 API Key를 발
 
 ### NAVER DataLab
 네이버 개발자센터에서 DataLab 애플리케이션을 등록하고 Client ID / Client Secret을 발급합니다. 네이버 검색 추이 기능에만 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`이 필요합니다.
+
+### Instagram Graph API
+Meta Developer 앱과 Instagram Business / Creator 계정이 필요합니다. 앱에서 발급한 토큰을 `INSTAGRAM_ACCESS_TOKEN`에 넣고, 연결된 Instagram Business Account ID를 `INSTAGRAM_BUSINESS_ACCOUNT_ID`에 넣습니다. 현재 구현은 키워드를 해시태그로 변환해 `ig_hashtag_search` 후 `recent_media`를 조회합니다.
+
+### TikTok Research API
+TikTok for Developers에서 Research API 접근 권한이 필요합니다. 이미 발급된 토큰이 있으면 `TIKTOK_ACCESS_TOKEN`에 넣고, 토큰을 서버에서 발급받으려면 `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`을 넣습니다. 현재 구현은 키워드, 최근 기간, 국가 코드를 `research/video/query` 조건으로 전달합니다.
 
 ## 설치
 
@@ -81,6 +94,12 @@ USE_MOCK_DATA=false
 YOUTUBE_API_KEY=your_youtube_api_key
 NAVER_CLIENT_ID=your_naver_client_id
 NAVER_CLIENT_SECRET=your_naver_client_secret
+INSTAGRAM_GRAPH_VERSION=v21.0
+INSTAGRAM_ACCESS_TOKEN=your_instagram_access_token
+INSTAGRAM_BUSINESS_ACCOUNT_ID=your_instagram_business_account_id
+TIKTOK_ACCESS_TOKEN=your_tiktok_access_token
+TIKTOK_CLIENT_KEY=your_tiktok_client_key
+TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
 ```
 
 ## 검색 예시

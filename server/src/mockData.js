@@ -77,6 +77,32 @@ export function getMockNaverSearchTrends(options = {}) {
   };
 }
 
+export function getMockSocialSearchResults(options = {}) {
+  const {
+    platform = 'instagram',
+    keywords = [],
+    locale = 'KR-ko',
+  } = options;
+  const cleanKeywords = Array.isArray(keywords)
+    ? keywords.map((k) => String(k).trim()).filter(Boolean)
+    : String(keywords).split(',').map((k) => k.trim()).filter(Boolean);
+  const fallbackKeywords = cleanKeywords.length ? cleanKeywords : ['맛집', '여행', '뷰티'];
+  const platformLabel = platform === 'tiktok' ? 'TikTok' : 'Instagram';
+  const now = Date.now();
+
+  return MOCK_SOCIAL_POSTS.map((post, index) => calculateOpportunityScore({
+    ...post,
+    platform,
+    videoId: `${platform}-${post.videoId}`,
+    title: `${platformLabel} ${post.title}`,
+    matchedKeyword: fallbackKeywords[index % fallbackKeywords.length],
+    channelTitle: post.channelTitle || platformLabel,
+    publishedAt: new Date(now - post.hoursAgo * 60 * 60 * 1000).toISOString(),
+    url: platform === 'tiktok' ? 'https://www.tiktok.com/' : 'https://www.instagram.com/',
+    locale,
+  })).sort((a, b) => b.opportunityScore - a.opportunityScore);
+}
+
 const MOCK_VIDEOS = [
   {
     videoId: 'demo-ai-shorts',
@@ -125,5 +151,44 @@ const MOCK_VIDEOS = [
     duration: 'PT6M02S',
     url: 'https://www.youtube.com/',
     hoursAgo: 52,
+  },
+];
+
+const MOCK_SOCIAL_POSTS = [
+  {
+    videoId: 'demo-food-hit',
+    title: '맛집 키워드로 반응 터진 릴스',
+    description: 'Demo social data',
+    thumbnail: '',
+    viewCount: 126000,
+    likeCount: 8200,
+    commentCount: 412,
+    subscriberCount: null,
+    hiddenSubscriberCount: true,
+    hoursAgo: 9,
+  },
+  {
+    videoId: 'demo-travel-short',
+    title: '여행 숏폼 저장수 높은 포맷',
+    description: 'Demo social data',
+    thumbnail: '',
+    viewCount: 83000,
+    likeCount: 4900,
+    commentCount: 203,
+    subscriberCount: null,
+    hiddenSubscriberCount: true,
+    hoursAgo: 22,
+  },
+  {
+    videoId: 'demo-beauty-trend',
+    title: '뷰티 전환율 좋은 최근 챌린지',
+    description: 'Demo social data',
+    thumbnail: '',
+    viewCount: 64500,
+    likeCount: 3700,
+    commentCount: 147,
+    subscriberCount: null,
+    hiddenSubscriberCount: true,
+    hoursAgo: 41,
   },
 ];

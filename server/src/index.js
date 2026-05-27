@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import { findOpportunityVideos } from './youtube.js';
+import { searchInstagramMedia } from './instagram.js';
+import { searchTikTokVideos } from './tiktok.js';
 import { getNaverSearchTrends } from './naver.js';
 import { summarizeVideos } from './scoring.js';
 import { streamYoutubeDownload } from './download.js';
@@ -35,6 +37,32 @@ app.post('/api/youtube/opportunities', async (req, res, next) => {
 });
 
 app.get('/api/youtube/download/:videoId', streamYoutubeDownload);
+
+app.post('/api/instagram/search', async (req, res, next) => {
+  try {
+    const items = await searchInstagramMedia(req.body);
+    res.json({
+      count: items.length,
+      summary: summarizeVideos(items),
+      items,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/tiktok/search', async (req, res, next) => {
+  try {
+    const items = await searchTikTokVideos(req.body);
+    res.json({
+      count: items.length,
+      summary: summarizeVideos(items),
+      items,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.post('/api/naver/trends', async (req, res, next) => {
   try {

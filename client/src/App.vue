@@ -8,7 +8,6 @@ const form = ref({
   minViews: 10000,
   locale: 'KR-ko',
   videoDuration: 'short',
-  maxResults: 25,
 });
 
 const activePlatform = ref('youtube');
@@ -17,6 +16,22 @@ const platformTabs = [
   { id: 'instagram', label: '인스타그램' },
   { id: 'tiktok', label: '틱톡' },
 ];
+const socialForms = ref({
+  instagram: {
+    keywords: '패션, 맛집, 여행, 뷰티, 운동',
+    days: 7,
+    locale: 'KR-ko',
+  },
+  tiktok: {
+    keywords: '챌린지, 쇼츠, 뷰티, 레시피, 운동',
+    days: 7,
+    locale: 'KR-ko',
+  },
+});
+const socialPlatformLabels = {
+  instagram: '인스타그램',
+  tiktok: '틱톡',
+};
 const dayOptions = [3, 5, 7, 10, 15, 20, 30];
 const youtubeLocales = [
   { value: 'KR-ko', label: '한국 (KR-ko)', regionCode: 'KR', relevanceLanguage: 'ko' },
@@ -44,15 +59,41 @@ const toast = ref(null);
 let toastTimer = null;
 const result = ref(null);
 const trendResult = ref(null);
+const resultPlatform = ref('youtube');
+const currentPage = ref(1);
+const pageSize = 20;
 
 const items = computed(() => result.value?.items || []);
+const totalPages = computed(() => Math.max(1, Math.ceil(items.value.length / pageSize)));
+const pagedItems = computed(() => {
+  const safePage = Math.min(currentPage.value, totalPages.value);
+  const start = (safePage - 1) * pageSize;
+  return items.value.slice(start, start + pageSize);
+});
+const paginationPages = computed(() => {
+  const total = totalPages.value;
+  const current = Math.min(currentPage.value, total);
+  const start = Math.max(1, Math.min(current - 2, total - 4));
+  const end = Math.min(total, start + 4);
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+});
+const pageStart = computed(() => (items.value.length ? (Math.min(currentPage.value, totalPages.value) - 1) * pageSize + 1 : 0));
+const pageEnd = computed(() => Math.min(Math.min(currentPage.value, totalPages.value) * pageSize, items.value.length));
 const summary = computed(() => result.value?.summary);
+const activeSocialLabel = computed(() => socialPlatformLabels[activePlatform.value] || '');
+const resultPlatformLabel = computed(() => {
+  if (resultPlatform.value === 'youtube') return '유튜브';
+  return socialPlatformLabels[resultPlatform.value] || '검색';
+});
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 async function searchVideos() {
   loading.value = true;
   error.value = '';
   result.value = null;
+  trendResult.value = null;
+  resultPlatform.value = 'youtube';
+  currentPage.value = 1;
 
   try {
     const selectedLocale = getSelectedYoutubeLocale();
@@ -60,10 +101,41 @@ async function searchVideos() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...form.value,
+        keywords: form.value.keywords.split(',').map((v) => v.trim()).filter(Boolean),
+        days: form.value.days,
+        maxSubscribers: form.value.maxSubscribers,
+        minViews: form.value.minViews,
+        locale: form.value.locale,
+        videoDuration: form.value.videoDuration,
         regionCode: selectedLocale.regionCode,
         relevanceLanguage: selectedLocale.relevanceLanguage,
-        keywords: form.value.keywords.split(',').map((v) => v.trim()).filter(Boolean),
+      }),
+    });
+  } catch (e) {
+    error.value = e.message;
+    showToast('error', e.message);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function searchSocialPlatform(platform) {
+  loading.value = true;
+  error.value = '';
+  result.value = null;
+  trendResult.value = null;
+  resultPlatform.value = platform;
+  currentPage.value = 1;
+
+  try {
+    const socialForm = socialForms.value[platform];
+    result.value = await fetchJson(`/api/${platform}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        keywords: socialForm.keywords.split(',').map((v) => v.trim()).filter(Boolean),
+        days: socialForm.days,
+        locale: socialForm.locale,
       }),
     });
   } catch (e) {
@@ -114,6 +186,10 @@ function formatDate(value) {
 
 function getSelectedYoutubeLocale() {
   return youtubeLocales.find((locale) => locale.value === form.value.locale) || youtubeLocales[0];
+}
+
+function goToPage(page) {
+  currentPage.value = Math.min(Math.max(Number(page), 1), totalPages.value);
 }
 
 async function downloadVideo(item) {
@@ -323,11 +399,6 @@ function apiUnavailableMessage() {
             </select>
           </label>
 
-          <label>
-            키워드당 검색 수
-            <input v-model.number="form.maxResults" type="number" min="1" max="50" />
-          </label>
-
           <div class="actions">
             <button :disabled="loading" @click="searchVideos">
               {{ loading ? '검색 중...' : '유튜브 후보 찾기' }}
@@ -364,9 +435,47 @@ function apiUnavailableMessage() {
         </section>
       </div>
 
-      <div v-else class="platform-placeholder">
-        <h2>{{ activePlatform === 'instagram' ? '인스타그램' : '틱톡' }} 검색 영역</h2>
-        <p>이 플랫폼은 아직 API가 연결되지 않았습니다. 다음 단계에서 키워드 검색, URL 분석, 다운로드 옵션을 이 탭 안에 붙일 수 있습니다.</p>
+      <div v-else class="platform-content">
+        <section class="social-search-area">
+          <div class="social-search-head">
+            <div>
+              <p class="direct-download-kicker">{{ activeSocialLabel }}</p>
+              <h2>키워드 검색</h2>
+            </div>
+            <span>API 설정 예정</span>
+          </div>
+
+          <div class="form-grid social-search-grid">
+            <label>
+              키워드, 쉼표로 구분
+              <textarea v-model="socialForms[activePlatform].keywords" rows="3" />
+            </label>
+
+            <label>
+              기간 / 최근 N일
+              <select v-model.number="socialForms[activePlatform].days">
+                <option v-for="days in dayOptions" :key="days" :value="days">
+                  최근 {{ days }}일
+                </option>
+              </select>
+            </label>
+
+            <label class="locale-field">
+              국가-언어
+              <select v-model="socialForms[activePlatform].locale">
+                <option v-for="locale in youtubeLocales" :key="locale.value" :value="locale.value">
+                  {{ locale.label }}
+                </option>
+              </select>
+            </label>
+
+            <div class="actions social-actions">
+              <button :disabled="loading" @click="searchSocialPlatform(activePlatform)">
+                {{ loading ? '검색 중...' : `${activeSocialLabel} 후보 찾기` }}
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -393,7 +502,7 @@ function apiUnavailableMessage() {
 
     <section v-if="items.length" class="panel table-panel">
       <div class="table-head">
-        <h2>검색 결과 {{ items.length }}개</h2>
+        <h2>{{ resultPlatformLabel }} 검색 결과 {{ items.length }}개</h2>
         <p>기회점수 높은 순</p>
       </div>
 
@@ -415,7 +524,7 @@ function apiUnavailableMessage() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.videoId">
+            <tr v-for="item in pagedItems" :key="item.videoId">
               <td class="video-cell">
                 <img v-if="item.thumbnail" :src="item.thumbnail" alt="" />
                 <a :href="item.url" target="_blank" rel="noreferrer">{{ item.title }}</a>
@@ -431,17 +540,43 @@ function apiUnavailableMessage() {
               <td>{{ formatDate(item.publishedAt) }}</td>
               <td>
                 <button
+                  v-if="item.platform === 'youtube' || !item.platform"
                   class="download-button"
                   :disabled="downloadingVideoId === item.videoId"
                   @click="downloadVideo(item)"
                 >
                   {{ downloadingVideoId === item.videoId ? '받는 중...' : '다운로드' }}
                 </button>
+                <a v-else class="download-button secondary-link" :href="item.url" target="_blank" rel="noreferrer">
+                  열기
+                </a>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <nav v-if="totalPages > 1" class="pagination" aria-label="검색 결과 페이지">
+        <p>{{ pageStart }}-{{ pageEnd }} / {{ items.length }}</p>
+        <div class="pagination-controls">
+          <button class="page-button" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
+            이전
+          </button>
+          <button
+            v-for="page in paginationPages"
+            :key="page"
+            class="page-button"
+            :class="{ active: page === currentPage }"
+            :aria-current="page === currentPage ? 'page' : undefined"
+            @click="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+          <button class="page-button" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">
+            다음
+          </button>
+        </div>
+      </nav>
     </section>
   </main>
 </template>

@@ -71,6 +71,7 @@ textarea, input, select {
 
 textarea { resize: vertical; }
 .form-grid label:first-child { grid-column: span 4; }
+.locale-field { grid-column: span 2; }
 
 .actions {
   grid-column: span 4;
@@ -351,7 +352,7 @@ th {
   .platform-tabs button:last-child { border-bottom: 0; }
   .platform-content { padding: 18px; }
   .form-grid { grid-template-columns: 1fr; }
-  .form-grid label:first-child, .actions { grid-column: span 1; }
+  .form-grid label:first-child, .locale-field, .actions { grid-column: span 1; }
   .actions button { width: 100%; }
   .direct-download-head { flex-direction: column; }
   .direct-download-row { grid-template-columns: 1fr; }

@@ -6,8 +6,7 @@ const form = ref({
   days: 7,
   maxSubscribers: 50000,
   minViews: 10000,
-  regionCode: 'KR',
-  relevanceLanguage: 'ko',
+  locale: 'KR-ko',
   videoDuration: 'short',
   maxResults: 25,
 });
@@ -17,6 +16,24 @@ const platformTabs = [
   { id: 'youtube', label: '유튜브' },
   { id: 'instagram', label: '인스타그램' },
   { id: 'tiktok', label: '틱톡' },
+];
+const youtubeLocales = [
+  { value: 'KR-ko', label: '한국 (KR-ko)', regionCode: 'KR', relevanceLanguage: 'ko' },
+  { value: 'JP-ja', label: '일본 (JP-ja)', regionCode: 'JP', relevanceLanguage: 'ja' },
+  { value: 'US-en', label: '미국 (US-en)', regionCode: 'US', relevanceLanguage: 'en' },
+  { value: 'GB-en', label: '영국 (GB-en)', regionCode: 'GB', relevanceLanguage: 'en' },
+  { value: 'CA-en', label: '캐나다 (CA-en)', regionCode: 'CA', relevanceLanguage: 'en' },
+  { value: 'AU-en', label: '호주 (AU-en)', regionCode: 'AU', relevanceLanguage: 'en' },
+  { value: 'TW-zh-Hant', label: '대만 (TW-zh-Hant)', regionCode: 'TW', relevanceLanguage: 'zh-Hant' },
+  { value: 'HK-zh-Hant', label: '홍콩 (HK-zh-Hant)', regionCode: 'HK', relevanceLanguage: 'zh-Hant' },
+  { value: 'IN-hi', label: '인도 (IN-hi)', regionCode: 'IN', relevanceLanguage: 'hi' },
+  { value: 'ID-id', label: '인도네시아 (ID-id)', regionCode: 'ID', relevanceLanguage: 'id' },
+  { value: 'TH-th', label: '태국 (TH-th)', regionCode: 'TH', relevanceLanguage: 'th' },
+  { value: 'VN-vi', label: '베트남 (VN-vi)', regionCode: 'VN', relevanceLanguage: 'vi' },
+  { value: 'FR-fr', label: '프랑스 (FR-fr)', regionCode: 'FR', relevanceLanguage: 'fr' },
+  { value: 'DE-de', label: '독일 (DE-de)', regionCode: 'DE', relevanceLanguage: 'de' },
+  { value: 'BR-pt', label: '브라질 (BR-pt)', regionCode: 'BR', relevanceLanguage: 'pt' },
+  { value: 'MX-es', label: '멕시코 (MX-es)', regionCode: 'MX', relevanceLanguage: 'es' },
 ];
 const loading = ref(false);
 const downloadingVideoId = ref('');
@@ -37,11 +54,14 @@ async function searchVideos() {
   result.value = null;
 
   try {
+    const selectedLocale = getSelectedYoutubeLocale();
     result.value = await fetchJson('/api/youtube/opportunities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form.value,
+        regionCode: selectedLocale.regionCode,
+        relevanceLanguage: selectedLocale.relevanceLanguage,
         keywords: form.value.keywords.split(',').map((v) => v.trim()).filter(Boolean),
       }),
     });
@@ -89,6 +109,10 @@ function formatNumber(value) {
 function formatDate(value) {
   if (!value) return '-';
   return new Date(value).toLocaleDateString('ko-KR');
+}
+
+function getSelectedYoutubeLocale() {
+  return youtubeLocales.find((locale) => locale.value === form.value.locale) || youtubeLocales[0];
 }
 
 async function downloadVideo(item) {
@@ -275,14 +299,13 @@ function apiUnavailableMessage() {
             <input v-model.number="form.minViews" type="number" min="0" />
           </label>
 
-          <label>
-            국가 코드
-            <input v-model="form.regionCode" />
-          </label>
-
-          <label>
-            언어 코드
-            <input v-model="form.relevanceLanguage" />
+          <label class="locale-field">
+            국가-언어
+            <select v-model="form.locale">
+              <option v-for="locale in youtubeLocales" :key="locale.value" :value="locale.value">
+                {{ locale.label }}
+              </option>
+            </select>
           </label>
 
           <label>

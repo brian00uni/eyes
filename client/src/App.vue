@@ -17,6 +17,7 @@ const platformTabs = [
   { id: 'instagram', label: '인스타그램' },
   { id: 'tiktok', label: '틱톡' },
 ];
+const dayOptions = [3, 5, 7, 10, 15, 20, 30];
 const youtubeLocales = [
   { value: 'KR-ko', label: '한국 (KR-ko)', regionCode: 'KR', relevanceLanguage: 'ko' },
   { value: 'JP-ja', label: '일본 (JP-ja)', regionCode: 'JP', relevanceLanguage: 'ja' },
@@ -286,7 +287,11 @@ function apiUnavailableMessage() {
 
           <label>
             기간 / 최근 N일
-            <input v-model.number="form.days" type="number" min="1" max="30" />
+            <select v-model.number="form.days">
+              <option v-for="days in dayOptions" :key="days" :value="days">
+                최근 {{ days }}일
+              </option>
+            </select>
           </label>
 
           <label>

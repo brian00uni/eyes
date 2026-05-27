@@ -294,6 +294,15 @@ function apiUnavailableMessage() {
             </select>
           </label>
 
+          <label class="locale-field">
+            국가-언어
+            <select v-model="form.locale">
+              <option v-for="locale in youtubeLocales" :key="locale.value" :value="locale.value">
+                {{ locale.label }}
+              </option>
+            </select>
+          </label>
+
           <label>
             최대 구독자 수
             <input v-model.number="form.maxSubscribers" type="number" min="0" />
@@ -302,15 +311,6 @@ function apiUnavailableMessage() {
           <label>
             최소 조회수
             <input v-model.number="form.minViews" type="number" min="0" />
-          </label>
-
-          <label class="locale-field">
-            국가-언어
-            <select v-model="form.locale">
-              <option v-for="locale in youtubeLocales" :key="locale.value" :value="locale.value">
-                {{ locale.label }}
-              </option>
-            </select>
           </label>
 
           <label>

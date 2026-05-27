@@ -48,7 +48,7 @@ h1 {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -70,14 +70,20 @@ textarea, input, select {
 }
 
 textarea { resize: vertical; }
-.form-grid label:first-child { grid-column: span 4; }
+.form-grid label:first-child { grid-column: span 5; }
 .locale-field { grid-column: span 2; }
 
 .actions {
-  grid-column: span 4;
+  grid-column: span 3;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  align-self: end;
+}
+
+.actions button {
+  white-space: nowrap;
 }
 
 button {
@@ -342,7 +348,7 @@ th {
 
 @media (max-width: 900px) {
   .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .form-grid label:first-child, .actions { grid-column: span 2; }
+  .form-grid label:first-child, .locale-field, .actions { grid-column: span 2; }
 }
 
 @media (max-width: 640px) {

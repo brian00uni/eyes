@@ -12,6 +12,12 @@ const form = ref({
   maxResults: 25,
 });
 
+const activePlatform = ref('youtube');
+const platformTabs = [
+  { id: 'youtube', label: '유튜브' },
+  { id: 'instagram', label: '인스타그램' },
+  { id: 'tiktok', label: '틱톡' },
+];
 const loading = ref(false);
 const downloadingVideoId = ref('');
 const directDownloadUrl = ref('');
@@ -232,85 +238,108 @@ function apiUnavailableMessage() {
       </p>
     </section>
 
-    <section class="panel form-grid">
-      <label>
-        키워드, 쉼표로 구분
-        <textarea v-model="form.keywords" rows="3" />
-      </label>
-
-      <label>
-        기간 / 최근 N일
-        <input v-model.number="form.days" type="number" min="1" max="30" />
-      </label>
-
-      <label>
-        최대 구독자 수
-        <input v-model.number="form.maxSubscribers" type="number" min="0" />
-      </label>
-
-      <label>
-        최소 조회수
-        <input v-model.number="form.minViews" type="number" min="0" />
-      </label>
-
-      <label>
-        국가 코드
-        <input v-model="form.regionCode" />
-      </label>
-
-      <label>
-        언어 코드
-        <input v-model="form.relevanceLanguage" />
-      </label>
-
-      <label>
-        영상 길이
-        <select v-model="form.videoDuration">
-          <option value="any">전체</option>
-          <option value="short">4분 미만</option>
-          <option value="medium">4분~20분</option>
-          <option value="long">20분 초과</option>
-        </select>
-      </label>
-
-      <label>
-        키워드당 검색 수
-        <input v-model.number="form.maxResults" type="number" min="1" max="50" />
-      </label>
-
-      <div class="actions">
-        <button :disabled="loading" @click="searchVideos">
-          {{ loading ? '검색 중...' : '유튜브 후보 찾기' }}
-        </button>
-        <button class="secondary" :disabled="loading" @click="searchTrends">
-          네이버 검색 추이 보기
+    <section class="panel platform-panel">
+      <div class="platform-tabs" role="tablist" aria-label="플랫폼 선택">
+        <button
+          v-for="tab in platformTabs"
+          :key="tab.id"
+          type="button"
+          role="tab"
+          :aria-selected="activePlatform === tab.id"
+          :class="{ active: activePlatform === tab.id }"
+          @click="activePlatform = tab.id"
+        >
+          {{ tab.label }}
         </button>
       </div>
-    </section>
 
-    <section class="panel direct-download">
-      <div class="direct-download-head">
-        <div>
-          <p class="direct-download-kicker">빠른 다운로드</p>
-          <h2>유튜브 URL 직접 다운로드</h2>
-        </div>
-        <span>URL 붙여넣기</span>
+      <div v-if="activePlatform === 'youtube'" class="platform-content">
+        <section class="form-grid">
+          <label>
+            키워드, 쉼표로 구분
+            <textarea v-model="form.keywords" rows="3" />
+          </label>
+
+          <label>
+            기간 / 최근 N일
+            <input v-model.number="form.days" type="number" min="1" max="30" />
+          </label>
+
+          <label>
+            최대 구독자 수
+            <input v-model.number="form.maxSubscribers" type="number" min="0" />
+          </label>
+
+          <label>
+            최소 조회수
+            <input v-model.number="form.minViews" type="number" min="0" />
+          </label>
+
+          <label>
+            국가 코드
+            <input v-model="form.regionCode" />
+          </label>
+
+          <label>
+            언어 코드
+            <input v-model="form.relevanceLanguage" />
+          </label>
+
+          <label>
+            영상 길이
+            <select v-model="form.videoDuration">
+              <option value="any">전체</option>
+              <option value="short">4분 미만</option>
+              <option value="medium">4분~20분</option>
+              <option value="long">20분 초과</option>
+            </select>
+          </label>
+
+          <label>
+            키워드당 검색 수
+            <input v-model.number="form.maxResults" type="number" min="1" max="50" />
+          </label>
+
+          <div class="actions">
+            <button :disabled="loading" @click="searchVideos">
+              {{ loading ? '검색 중...' : '유튜브 후보 찾기' }}
+            </button>
+            <button class="secondary" :disabled="loading" @click="searchTrends">
+              네이버 검색 추이 보기
+            </button>
+          </div>
+        </section>
+
+        <section class="direct-download">
+          <div class="direct-download-head">
+            <div>
+              <p class="direct-download-kicker">빠른 다운로드</p>
+              <h2>유튜브 URL 직접 다운로드</h2>
+            </div>
+            <span>URL 붙여넣기</span>
+          </div>
+
+          <label>
+            다운로드할 영상 링크
+            <div class="direct-download-row">
+              <input
+                v-model="directDownloadUrl"
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                @keydown.enter.prevent="downloadDirectVideo"
+              />
+              <button :disabled="Boolean(downloadingVideoId)" @click="downloadDirectVideo">
+                {{ downloadingVideoId ? '받는 중...' : '다운로드' }}
+              </button>
+            </div>
+          </label>
+        </section>
       </div>
 
-      <label>
-        다운로드할 영상 링크
-        <div class="direct-download-row">
-          <input
-            v-model="directDownloadUrl"
-            type="url"
-            placeholder="https://www.youtube.com/watch?v=..."
-            @keydown.enter.prevent="downloadDirectVideo"
-          />
-          <button :disabled="Boolean(downloadingVideoId)" @click="downloadDirectVideo">
-            {{ downloadingVideoId ? '받는 중...' : '다운로드' }}
-          </button>
-        </div>
-      </label>
+      <div v-else class="platform-placeholder">
+        <h2>{{ activePlatform === 'instagram' ? '인스타그램' : '틱톡' }} 검색 영역</h2>
+        <p>이 플랫폼은 아직 API가 연결되지 않았습니다. 다음 단계에서 키워드 검색, URL 분석, 다운로드 옵션을 이 탭 안에 붙일 수 있습니다.</p>
+      </div>
     </section>
 
     <p v-if="error" class="error">{{ error }}</p>

@@ -62,6 +62,17 @@ yarn start
 
 이 경우 `http://127.0.0.1:4000` 에서 앱과 API가 함께 제공됩니다.
 
+## GitHub Pages 배포 주의
+
+GitHub Pages는 정적 파일만 호스팅하므로 `server/`의 Express API는 실행되지 않습니다.
+Pages에서 검색/다운로드까지 사용하려면 백엔드 서버를 Render, Railway, Fly.io 같은 Node 호스팅에 따로 배포한 뒤, GitHub 저장소 변수에 아래 값을 추가해야 합니다.
+
+```txt
+VITE_API_BASE_URL=https://your-api-server.example.com
+```
+
+로컬 개발에서는 Vite proxy가 `/api` 요청을 `http://localhost:4000`으로 넘기므로 별도 설정이 필요 없습니다.
+
 ## 서버 .env 예시 --
 
 ```env

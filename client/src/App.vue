@@ -22,6 +22,7 @@ const trendResult = ref(null);
 
 const items = computed(() => result.value?.items || []);
 const summary = computed(() => result.value?.summary);
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 async function searchVideos() {
   loading.value = true;
@@ -29,7 +30,7 @@ async function searchVideos() {
   result.value = null;
 
   try {
-    const res = await fetch('/api/youtube/opportunities', {
+    result.value = await fetchJson('/api/youtube/opportunities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -37,11 +38,9 @@ async function searchVideos() {
         keywords: form.value.keywords.split(',').map((v) => v.trim()).filter(Boolean),
       }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || '검색 실패');
-    result.value = data;
   } catch (e) {
     error.value = e.message;
+    showToast('error', e.message);
   } finally {
     loading.value = false;
   }
@@ -57,7 +56,7 @@ async function searchTrends() {
     const endDate = today.toISOString().slice(0, 10);
     const startDate = new Date(today.getTime() - Number(form.value.days) * 86400000).toISOString().slice(0, 10);
 
-    const res = await fetch('/api/naver/trends', {
+    trendResult.value = await fetchJson('/api/naver/trends', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,11 +66,9 @@ async function searchTrends() {
         timeUnit: 'date',
       }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || '트렌드 조회 실패');
-    trendResult.value = data;
   } catch (e) {
     error.value = e.message;
+    showToast('error', e.message);
   } finally {
     loading.value = false;
   }
@@ -101,7 +98,7 @@ async function downloadVideo(item) {
     }
 
     if (!contentType.startsWith('video/')) {
-      throw new Error('영상 파일이 아닌 응답을 받았습니다.');
+      throw new Error(contentType.includes('text/html') ? apiUnavailableMessage() : '영상 파일이 아닌 응답을 받았습니다.');
     }
 
     const blob = await res.blob();
@@ -124,7 +121,7 @@ async function downloadVideo(item) {
 
 function downloadUrl(item) {
   const params = new URLSearchParams({ title: item.title || item.videoId });
-  return `/api/youtube/download/${item.videoId}?${params.toString()}`;
+  return apiUrl(`/api/youtube/download/${item.videoId}?${params.toString()}`);
 }
 
 function getDownloadFilename(res, item) {
@@ -151,6 +148,30 @@ function showToast(type, message) {
     toast.value = null;
     toastTimer = null;
   }, 3500);
+}
+
+async function fetchJson(path, options = {}) {
+  const res = await fetch(apiUrl(path), options);
+  const contentType = res.headers.get('content-type') || '';
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(apiUnavailableMessage());
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'API 요청 실패');
+  return data;
+}
+
+function apiUrl(path) {
+  return `${API_BASE_URL}${path}`;
+}
+
+function apiUnavailableMessage() {
+  if (!API_BASE_URL && window.location.hostname.endsWith('github.io')) {
+    return 'GitHub Pages에는 API 서버가 없습니다. 검색/다운로드를 쓰려면 백엔드 서버를 따로 배포하고 VITE_API_BASE_URL을 설정해야 합니다.';
+  }
+  return 'API 서버에서 올바른 JSON 응답을 받지 못했습니다. 서버가 실행 중인지 확인하세요.';
 }
 </script>
 
